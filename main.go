@@ -1,75 +1,52 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"log"
-	"os"
-	"strconv"
-	"strings"
 )
 
-type edge struct {
-	X     int
-	Y     int
-	costA int
-	costB int
-	costC int
+type edgeStruct struct {
+	X    int
+	Y    int
+	Cost int
 }
 
-type customer struct {
-	demand int
+type customerStruct struct {
+	ID     int
+	Demand int
 }
+
+// verticesCount = n+1
 
 func main() {
-	parseFiletoStructs("input/n=10/CCNFP10g1a.txt")
-}
+	var c Child
 
-func parseFiletoStructs(inPath string) {
-	file, err := os.Open(inPath)
-	errFunc(err)
-	defer file.Close()
+	verticesCount, _, Aij, Bij, Cij := parseFile("input/n=10/CCNFP10g1a.txt")
+	//inputToCustomersStruct(verticesCount, customerDemand)
+	costsA := inputToGraph(verticesCount, Aij)
 
-	step := 0
-	scanner := bufio.NewScanner(file)
-	var customerDemand []int
-	var Aij []int
-	var Bij []int
-	var Cij []int
-	for scanner.Scan() {
-		if strings.Contains(scanner.Text(), "Cost") {
-			step = step + 1
-			fmt.Println(step)
-		} else if step == 0 {
-			// Extract Customer Demands
-			trimmedLine := strings.TrimSpace(scanner.Text())
-			intLine, err := strconv.Atoi(trimmedLine)
-			errFunc(err)
-			customerDemand = append(customerDemand, intLine)
+	costsB := inputToGraph(verticesCount, Bij)
 
-			// Extract Variable Costs Component A
-		} else if step == 1 {
-			trimmedLine := strings.TrimSpace(scanner.Text())
-			intLine, err := strconv.Atoi(trimmedLine)
-			errFunc(err)
-			Aij = append(Aij, intLine)
+	costsC := inputToGraph(verticesCount, Cij)
 
-			// Extract Variable Cost Component B
-		} else if step == 2 {
-			trimmedLine := strings.TrimSpace(scanner.Text())
-			intLine, err := strconv.Atoi(trimmedLine)
-			errFunc(err)
-			Bij = append(Bij, intLine)
+	c.initiateFlow(verticesCount)
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
+	c.mutate()
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
+	c.mutate()
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
+	c.mutate()
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
+	c.mutate()
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
+	c.mutate()
+	c.costEstimatorOne(costsA, costsB, costsC, verticesCount)
+	println(c.fitness)
 
-			// Extract fixed Cost Component C
-		} else if step == 3 {
-			trimmedLine := strings.TrimSpace(scanner.Text())
-			intLine, err := strconv.Atoi(trimmedLine)
-			errFunc(err)
-			Cij = append(Cij, intLine)
-		}
-	}
-	errFunc(scanner.Err())
 }
 
 func errFunc(err error) {
