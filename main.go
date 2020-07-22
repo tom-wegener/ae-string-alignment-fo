@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type edgeStruct struct {
@@ -30,12 +30,21 @@ type Config struct {
 
 // verticesCount = n+1
 var data = `
-estimator: zero
-generations: 2000000
-initiate: dumb
-input: input/n=10/CCNFP10g1a.txt
-mutate: smarter
+a: Easy!
+b:
+  c: 2
+  d: [3, 4]
 `
+
+// Note: struct fields must be public in order for unmarshal to
+// correctly populate the data.
+type T struct {
+	A string
+	B struct {
+		RenamedC int   `yaml:"c"`
+		D        []int `yaml:",flow"`
+	}
+}
 
 func main() {
 	var cfg Config
@@ -90,6 +99,14 @@ func readConfig(cfg *Config) {
 	err = yaml.Unmarshal([]byte(data), cfg)
 	fmt.Printf("--- t:\n%v\n\n", cfg)
 	errFunc(err)
+
+	t := T{}
+
+	err = yaml.Unmarshal([]byte(data), &t)
+	if err != nil {
+		log.Fatalf("error: %v", err)
+	}
+	fmt.Printf("--- t:\n%v\n\n", t)
 }
 
 func errFunc(err error) {
