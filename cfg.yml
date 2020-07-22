@@ -1,0 +1,6 @@
+#--- 
+#estimator: zero
+generations: 2000000
+#initiate: dumb
+#input: input/n=10/CCNFP10g1a.txt
+#mutate: smarter
