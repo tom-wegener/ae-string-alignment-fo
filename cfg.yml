@@ -1,6 +1,7 @@
 #--- 
 estimator: zero
-generations: 2000000
-initiate: dumb
+generations: 20000000
+initiate: two
 input: input/n=10/CCNFP10g1a.txt
 mutate: smarter
+dot: True
