@@ -40,16 +40,6 @@ func inputToGraph(verticesCount int, Aij []int64) (edges [][]int64) {
 	return
 }
 
-func inputToCustomersStruct(verticesCount int, customerDemand []int) (customers []customerStruct) {
-	for i := 1; i < verticesCount; i++ {
-		var aCustomer customerStruct
-		aCustomer.ID = i
-		aCustomer.Demand = customerDemand[i-1]
-		customers = append(customers, aCustomer)
-	}
-	return
-}
-
 func parseFile(inPath string) (verticesCount int, customerDemand, Aij, Bij, Cij []int64) {
 
 	file, err := os.Open(inPath)
