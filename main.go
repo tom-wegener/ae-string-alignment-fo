@@ -43,22 +43,34 @@ func main() {
 		sourceCapacity = sourceCapacity + demand
 	}
 
+	// The demand could be seen as negative storage capacity
+	// This fact will be used later on
+	// Also the last node is the source
+	for i := range customerDemand {
+		x.demand = append(x.demand, -1*customerDemand[i])
+	}
+	x.demand = append(x.demand, sourceCapacity)
+
 	if cfg.Initiate == "zero" {
 		x.initiateFlowZero(verticesCount)
 	} else if cfg.Initiate == "one" {
 		x.initiateFlowOne(verticesCount, customerDemand, network)
 	} else if cfg.Initiate == "two" {
-		x.initiateFlowTwo(verticesCount, customerDemand, network, sourceCapacity)
+		x.initiateFlowTwo(verticesCount, customerDemand, network)
 	}
 
 	x.costCalculator(costsA, costsB, costsC, customerDemand)
 	println(x.fitness)
 
 	for i := 0; i < maxGenerations; i++ {
-		x.findNeighbour(&c)
+		x.findNeighbourTwo(&c, network)
 		c.costCalculator(costsA, costsB, costsC, customerDemand)
 		if c.fitness < x.fitness {
 			c.toParent(&x)
+			for _, storage := range c.storage {
+				print(storage, ", ")
+			}
+			println()
 			println(c.fitness)
 		}
 	}
@@ -88,12 +100,11 @@ func makeGraph(network [][]int64) {
 	}
 	graph = graph + "}"
 
+	// Dump dot-graph to file
 	f, err := os.Create("input.dot")
 	errFunc(err)
-
 	_, err = f.WriteString(graph)
 	errFunc(err)
-
 }
 
 func errFunc(err error) {
