@@ -1,78 +1,54 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
+	"strconv"
 
 	"gopkg.in/yaml.v3"
 )
 
-type edgeStruct struct {
-	X    int
-	Y    int
-	Cost int
-}
-
-type customerStruct struct {
-	ID     int
-	Demand int
-}
-
 // Config is the config-struct
 type Config struct {
-	input       string
-	generations int
-	initiate    string
-	estimator   string
-	mutate      string
-}
-
-// verticesCount = n+1
-var data = `
-a: Easy!
-b:
-  c: 2
-  d: [3, 4]
-`
-
-// Note: struct fields must be public in order for unmarshal to
-// correctly populate the data.
-type T struct {
-	A string
-	B struct {
-		RenamedC int   `yaml:"c"`
-		D        []int `yaml:",flow"`
-	}
+	Input       string
+	Generations int
+	Initiate    string
+	Estimator   string
+	Mutate      string
+	Dot         bool
 }
 
 func main() {
-	var cfg Config
+	cfg := Config{}
 	readConfig(&cfg)
-
-	fmt.Printf("%+v", cfg)
 
 	var c Child // Always Child
 	var x Child // Always parent
-	maxGenerations := cfg.generations
+	maxGenerations := cfg.Generations
 
-	// Extract the date out of the File
-	verticesCount, customerDemand, Aij, Bij, Cij := parseFile(cfg.input)
+	// Extract the date out of the File and check if there could be errors
+	verticesCount, customerDemand, Aij, Bij, Cij := parseFile(cfg.Input)
 	costsA := inputToGraph(verticesCount, Aij)
 	costsB := inputToGraph(verticesCount, Bij)
 	costsC := inputToGraph(verticesCount, Cij)
-	for i, row := range costsA {
-		for j := range row {
-			print(costsA[i][j], ",")
-		}
-		println()
-	}
 	network, err := createNetwork(costsA, costsB, costsC)
 	errFunc(err)
-	if cfg.initiate == "dumb" {
-		x.initiateFlowDumb(verticesCount)
-	} else if cfg.initiate == "smarter" {
-		x.initiateFlowSmarter(verticesCount, customerDemand, network)
+
+	// Generate a Graph based on the costs of A
+	makeGraph(costsA)
+
+	// Calculate the demand which is also the capacity of the source
+	var sourceCapacity int64
+	for _, demand := range customerDemand {
+		sourceCapacity = sourceCapacity + demand
+	}
+
+	if cfg.Initiate == "zero" {
+		x.initiateFlowZero(verticesCount)
+	} else if cfg.Initiate == "one" {
+		x.initiateFlowOne(verticesCount, customerDemand, network)
+	} else if cfg.Initiate == "two" {
+		x.initiateFlowTwo(verticesCount, customerDemand, network, sourceCapacity)
 	}
 
 	x.costCalculator(costsA, costsB, costsC, customerDemand)
@@ -96,17 +72,28 @@ func readConfig(cfg *Config) {
 
 	decoder := yaml.NewDecoder(f)
 	err = decoder.Decode(cfg)
-	err = yaml.Unmarshal([]byte(data), cfg)
-	fmt.Printf("--- t:\n%v\n\n", cfg)
+	errFunc(err)
+}
+
+func makeGraph(network [][]int64) {
+	graph := `digraph graphname
+	{
+`
+	for i, row := range network {
+		for j := range row {
+			if network[i][j] != 0 {
+				graph = graph + "    " + strconv.Itoa(i) + " -> " + strconv.Itoa(j) + "[ label=" + strconv.FormatInt(network[i][j], 10) + "];\n"
+			}
+		}
+	}
+	graph = graph + "}"
+
+	f, err := os.Create("input.dot")
 	errFunc(err)
 
-	t := T{}
+	_, err = f.WriteString(graph)
+	errFunc(err)
 
-	err = yaml.Unmarshal([]byte(data), &t)
-	if err != nil {
-		log.Fatalf("error: %v", err)
-	}
-	fmt.Printf("--- t:\n%v\n\n", t)
 }
 
 func errFunc(err error) {
