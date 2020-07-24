@@ -15,6 +15,8 @@ type Child struct {
 func (x *Child) toParent(c *Child) {
 	c.flow = x.flow
 	c.fitness = x.fitness
+	c.storage = x.storage
+	c.demand = x.demand
 }
 
 // mutateDumb: mutate the genome on all places but random place
@@ -151,7 +153,7 @@ func (x *Child) initiateFlowZero(verticesCount int) {
 
 // initiateFlowSmarter: this function generates a first flow
 //  - only uses existing vertices
-func (x *Child) initiateFlowOne(verticesCount int, customerDemand []int64, network [][]bool) {
+func (x *Child) initiateFlowOne(verticesCount int, network [][]bool) {
 
 	for i := verticesCount; i > 0; i-- {
 		var flowX []int64
@@ -171,7 +173,7 @@ func (x *Child) initiateFlowOne(verticesCount int, customerDemand []int64, netwo
 // initiateFlowTwo: this function generates a first flow
 //  - only uses existing vertices
 //  - recognizes the demand
-func (x *Child) initiateFlowTwo(verticesCount int, customerDemand []int64, network [][]bool) {
+func (x *Child) initiateFlowTwo(verticesCount int, network [][]bool) {
 
 	localStorage := x.demand
 
@@ -189,5 +191,6 @@ func (x *Child) initiateFlowTwo(verticesCount int, customerDemand []int64, netwo
 		}
 		x.flow = append(x.flow, flowX)
 	}
+	x.storage = localStorage
 	return
 }
