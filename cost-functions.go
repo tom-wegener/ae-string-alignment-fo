@@ -4,15 +4,15 @@ package main
 // The functions get the three cost-matrices (variable a, varioable b, fixed c) and the flow-matrix and calculate the overall cost of the flow-matrix.
 // We can use them as to calculate our overall fitness
 
-func (x *Child) costCalculator(a, b, c [][]int64, customerDemand []int64) {
+func (x *Child) costCalculator(a, b, c [][]int64) {
 	function := 0
 
 	if function == 0 {
-		x.costEstimatorZero(a, b, c, customerDemand)
+		x.costEstimatorZero(a, b, c)
 	}
 }
 
-func (x *Child) costEstimatorZero(a, b, c [][]int64, customerDemand []int64) {
+func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 	var costsX int64
 	var costs int64
 	for i, row := range a {
@@ -22,7 +22,6 @@ func (x *Child) costEstimatorZero(a, b, c [][]int64, customerDemand []int64) {
 		costs = costs + costsX
 	}
 	x.fitness = costs
-	demandChecker(x.flow, customerDemand)
 	return
 }
 
@@ -30,13 +29,6 @@ func costEstimatorZeroEdge(aij, bij, cij int64, xij int64) (costs int64) {
 	costs = -aij*xij*xij + bij*xij + cij
 	return
 
-}
-
-// TODO: Think about a smart way to model this shit...
-func demandChecker(flow [][]int64, customerDemand []int64) (strafterm int64) {
-
-	strafterm = 1
-	return
 }
 
 /*
