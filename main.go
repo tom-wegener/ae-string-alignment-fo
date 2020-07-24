@@ -22,10 +22,6 @@ func main() {
 	cfg := Config{}
 	readConfig(&cfg)
 
-	var c Child // Always Child
-	var x Child // Always parent
-	maxGenerations := cfg.Generations
-
 	// Extract the date out of the File and check if there could be errors
 	verticesCount, customerDemand, Aij, Bij, Cij := parseFile(cfg.Input)
 	costsA := inputToGraph(verticesCount, Aij)
@@ -38,43 +34,69 @@ func main() {
 	makeGraph(costsA)
 
 	// Calculate the demand which is also the capacity of the source
-	var sourceCapacity int64
-	for _, demand := range customerDemand {
-		sourceCapacity = sourceCapacity + demand
-	}
-
 	// The demand could be seen as negative storage capacity
 	// This fact will be used later on
 	// Also the last node is the source
+	var sourceCapacity int64
+	var demand []int64
 	for i := range customerDemand {
-		x.demand = append(x.demand, -1*customerDemand[i])
+		sourceCapacity = sourceCapacity + customerDemand[i]
+		demand = append(demand, -1*customerDemand[i])
 	}
-	x.demand = append(x.demand, sourceCapacity)
+	demand = append(demand, sourceCapacity)
 
+	for i := 0; i < 200; i++ {
+		println("------ ", i, ". Run ------")
+		hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC)
+	}
+}
+
+func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64) {
+
+	c := new(Child) // Always Child
+	x := new(Child) // Always parent
+	x.demand = make([]int64, verticesCount)
+	copied := copy(x.demand, demand)
+
+	print(copied, " - ")
+	for i := range demand {
+		print(demand[i], ", ")
+	}
+	println()
+
+	// Initiate the flow but make it dependend from the config
 	if cfg.Initiate == "zero" {
 		x.initiateFlowZero(verticesCount)
 	} else if cfg.Initiate == "one" {
-		x.initiateFlowOne(verticesCount, customerDemand, network)
+		x.initiateFlowOne(verticesCount, network)
 	} else if cfg.Initiate == "two" {
-		x.initiateFlowTwo(verticesCount, customerDemand, network)
+		x.initiateFlowTwo(verticesCount, network)
 	}
 
-	x.costCalculator(costsA, costsB, costsC, customerDemand)
-	println(x.fitness)
+	print(len(x.storage), " - ")
+	for _, storage := range x.storage {
+		print(storage, ", ")
+	}
+	x.costCalculator(costsA, costsB, costsC)
+	println(x.fitness, ",")
 
-	for i := 0; i < maxGenerations; i++ {
-		x.findNeighbourTwo(&c, network)
-		c.costCalculator(costsA, costsB, costsC, customerDemand)
+	for i := 0; i < cfg.Generations; i++ {
+		x.findNeighbourTwo(c, network)
+		c.costCalculator(costsA, costsB, costsC)
 		if c.fitness < x.fitness {
-			c.toParent(&x)
-			for _, storage := range c.storage {
-				print(storage, ", ")
+			c.toParent(x)
+			print(len(x.storage), " - ")
+			for k := range x.storage {
+				print(x.storage[k], ", ")
 			}
-			println()
-			println(c.fitness)
+			println(x.fitness, ",")
 		}
 	}
-
+	print(len(demand), " - ")
+	for i := range demand {
+		print(demand[i], ", ")
+	}
+	println()
 }
 
 func readConfig(cfg *Config) {
