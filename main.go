@@ -2,25 +2,35 @@ package main
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"strconv"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
 // Config is the config-struct
 type Config struct {
-	Input       string
-	Generations int
-	Initiate    string
-	Estimator   string
-	Mutate      string
-	Dot         bool
+	Input          string
+	Generations    int
+	Initiate       string
+	Estimator      string
+	Mutate         string
+	Dot            bool
+	PopulationSize int
+	MutationRate   float64
+	Crossover      string
+	Algorithmus    string
 }
 
+var cfg Config
+
 func main() {
-	cfg := Config{}
+
 	readConfig(&cfg)
+	// Seed the random gen
+	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Extract the date out of the File and check if there could be errors
 	verticesCount, customerDemand, Aij, Bij, Cij := parseFile(cfg.Input)
@@ -45,10 +55,30 @@ func main() {
 	}
 	demand = append(demand, sourceCapacity)
 
-	for i := 0; i < 200; i++ {
-		println("------ ", i, ". Run ------")
-		hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC)
+	if cfg.Algorithmus == "hillclimber" {
+		for i := 0; i < 200; i++ {
+			println("------ ", i, ". Run ------")
+			hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC)
+		}
+	} else if cfg.Algorithmus == "evolutionär" {
+		println("Generating population...")
+		var population []Child
+		population = populate(network, verticesCount, demand, costsA, costsB, costsC)
+		println("Population generated...")
+		for i := 0; i < cfg.Generations; i++ {
+			population = ranking(population)
+			printChild(population[0], i)
+			population = selection(population, costsA, costsB, costsC)
+		}
 	}
+}
+
+func printChild(x Child, n int) {
+	print(n, ",")
+	for i := range x.storage {
+		print(x.storage[i], ",")
+	}
+	println(x.fitness, ",")
 }
 
 func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64) {
