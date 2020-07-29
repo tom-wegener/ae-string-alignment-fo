@@ -7,7 +7,7 @@ Das Single Source Uncapacitated Concave Minimum-Cost Network Flow Problem (SSUC 
 Mathematisch lässt sich das Problem folgendermaßen darstellen:
 
 (1) $$ min: \sum_{(i,j) \in A } g_{ij} (x_{ij}, y_{ij}) = cost $$
-(2) mit: $$ g(x_{ij}) = -a_{i,j} * x_{i,j}^2+b_{i,j}*x_{i,j}+c_{i,j} $$
+(2) mit: $$ g(x_{ij}) = -a_{i,j} *x_{i,j}^2+b_{i,j}*x_{i,j}+c_{i,j} $$
 (3) $$ x_{i,j} \in M, \forall (i,j) \in A $$
 (4) $$ x_{i,j} \geq 0, \forall (i,j) \in A $$
 (5) $$ \forall j \in N \setminus {t} \sum_{i|(i,j) \in A } x_{ij}, y_{ij} - \sum_{(j,k) \in A } x_{jk} = storage_j $$
@@ -28,7 +28,7 @@ Zusätzlich werden drei verschiedene polynomiale konkave Funktionen bereitgestel
 
 ## Hillclimbing im Netzwerk
 
-Der Hillclimbing-Algorithmus basiert auf der Annahme, dass in der Nachbarschaft eines Individuums ein besseres Individuum gefunden werden kann. Zusätzlich basiert er auf der Annahme, dass ausgehend von diesem Individuum ein weiteres gefunden werden kann. In diesem Fall ist das Individuum ein sog. Flow, also wieviele Waren über welche Kante transportiert werden. Dabei wird es in diesem Fall im Programm durch eine Matrix dargestellt.
+Der Hillclimbing-Algorithmus basiert auf der Annahme, dass in der Nachbarschaft eines Individuums ein besseres Individuum gefunden werden kann. Zusätzlich basiert er auf der Annahme, dass ausgehend von diesem Individuum ein weiteres gefunden werden kann. In diesem Fall ist das Individuum ein sog. Flow, also wieviele Waren über welche Kante transportiert werden. Dabei wird der Flow in diesem Fall im Programm durch eine Matrix dargestellt.
 
 Das Individuum ist ein struct, also ein Objekt, das einerseits die Flow-Matrix des Individuums beinhaltet, aber außerdem noch den Demand der einzelnen Knoten sowie eine aktuelle Verteilung der waren auf die Knoten, sowie den aktuellen Güte-Wert.
 
@@ -36,6 +36,20 @@ Die Flow-Matrix des Individuums wird durch eine Funktion initialisiert, die vers
 
 Der Nachbar wird über eine Funktion gefunden, die genau die gleichen Faktoren berücksichtigt. Jedoch ist der Anfangspunkt nicht die Quelle, sondern eine zufällig ausgewählte Kante. Anschließend werden alle folgenden Punkte über eine Zufallsfunktion mit dem Überschuss als Obergrenze neu verteilt. Dadurch sind zwar Nachbarn relativ weit voneinander entfernt, aber die Chance tatsächliche Verbesserungen zu erreichen ist deutlich erhöht. Statt Güte-Werten, die konstant im neun- bis zehn-stelligen Bereich sind, wurden dadurch auch Werte im mittleren sieben-stelligen Bereich gefunden.
 
+Der Gütewert wird über die oben genannte Funktion berechnet. Zusätzlich gibt es jedoch einen Strafterm, der von den an den Knoten gespeicherten werden abhängig ist.
+
 Wie es beim Hillclimbing üblich ist, werden die Gütewerte der Individuen verglichen und für das Individuum mit dem besseren, also kleineren, Gütewert wird ein neuer Nachbar gefunden.
 
 ## Evolution im Netzwerk
+
+Die Evolution im Netzwerk wurde über einen genetischen Algorithmus versucht, greift aber auch teilwise auf die gleichen oder abgewandelte Funktionen des Hill-Climbing zu. Jedoch wurden auch verschiedene Funktionen ausprobiert, die unabhängig von dem Hillclimber entstanden sind.
+
+Generell wurde die Kosten-Funktion beibehalten, die weiterhin eine Güte zurückgibt, die zu minimieren ist. Der Strafterm wurde auch beibehalten.
+
+### Erzeugen einer Population
+
+Die Population wurde über eine Funktion erzeugt, die, je nach eingestellter Populationsgröße, eine feste Anzahl an Individuen mit der gleichen Funktion, wie die Individuen des Hillclimbers, erzeugt. Dadurch entsteht eine Population, die einerseits sehr hohen Gütewerte hat.
+
+### Selektion von Flows
+
+Für die Selektion wurden verschiedene Selektionsarten ausprobiert. Einerseits wurde die Rang-basierte Selektion ausprobiert
