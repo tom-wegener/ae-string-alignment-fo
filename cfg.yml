@@ -1,10 +1,11 @@
 #--- 
 estimator: zero
-generations: 20000000
+generations: 2000
+hcgeneration: 2000000
 initiate: two
 input: input/n=10/CCNFP10g1a.txt
 mutate: smarter
 dot: True
-populationsize: 2000
-mutationrate: 0.005
+populationsize: 20000
+mutationrate: 0.05
 algorithmus: evolutionär
