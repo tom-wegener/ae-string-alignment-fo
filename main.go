@@ -46,23 +46,16 @@ func main() {
 	demand = append(demand, sourceCapacity)
 
 	for i := 0; i < 200; i++ {
-		println("------ ", i, ". Run ------")
-		hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC)
+		hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC, i)
 	}
 }
 
-func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64) {
+func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64, run int) {
 
 	c := new(Child) // Always Child
 	x := new(Child) // Always parent
 	x.demand = make([]int64, verticesCount)
-	copied := copy(x.demand, demand)
-
-	print(copied, " - ")
-	for i := range demand {
-		print(demand[i], ", ")
-	}
-	println()
+	copy(x.demand, demand)
 
 	// Initiate the flow but make it dependend from the config
 	if cfg.Initiate == "zero" {
@@ -73,9 +66,9 @@ func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, 
 		x.initiateFlowTwo(verticesCount, network)
 	}
 
-	print(len(x.storage), " - ")
+	print(run, ",")
 	for _, storage := range x.storage {
-		print(storage, ", ")
+		print(storage, ",")
 	}
 	x.costCalculator(costsA, costsB, costsC)
 	println(x.fitness, ",")
@@ -85,18 +78,13 @@ func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, 
 		c.costCalculator(costsA, costsB, costsC)
 		if c.fitness < x.fitness {
 			c.toParent(x)
-			print(len(x.storage), " - ")
+			print(run, ",")
 			for k := range x.storage {
 				print(x.storage[k], ", ")
 			}
 			println(x.fitness, ",")
 		}
 	}
-	print(len(demand), " - ")
-	for i := range demand {
-		print(demand[i], ", ")
-	}
-	println()
 }
 
 func readConfig(cfg *Config) {
