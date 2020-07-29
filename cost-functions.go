@@ -1,5 +1,7 @@
 package main
 
+import "math"
+
 // x[i][j] is the flow for the between the vertices i and j
 // The functions get the three cost-matrices (variable a, varioable b, fixed c) and the flow-matrix and calculate the overall cost of the flow-matrix.
 // We can use them as to calculate our overall fitness
@@ -21,7 +23,13 @@ func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 		}
 		costs = costs + costsX
 	}
-	x.fitness = costs
+	var punishment float64
+	for _, store := range x.storage {
+		storeFloat := float64(store)
+		punishment = punishment + math.Abs(storeFloat)
+	}
+	punishmentInt := int64(punishment) * 100000
+	x.fitness = costs + punishmentInt
 	return
 }
 
@@ -30,27 +38,3 @@ func costEstimatorZeroEdge(aij, bij, cij int64, xij int64) (costs int64) {
 	return
 
 }
-
-/*
-func costEstimatorTwo(a, b, c, x [][]int, verticesCount int) (costs int){
-	var costsX int
-	for i := 0; i < verticesCount; i++ {
-		for j := 0; j < verticesCount; j++ {
-			costsX = costsX + (-a[i][j]*x[i][j]*x[i][j] + b[i][j]*x[i][j] + c[i][j])
-		}
-		costs = costs + costsX
-	}
-	return
-}
-
-func costEstimatorThree(a, b, c, x [][]int, verticesCount int) (costs int){
-	var costsX int
-	for i := 0; i < verticesCount; i++ {
-		for j := 0; j < verticesCount; j++ {
-			costsX = costsX + (-a[i][j]*x[i][j]*x[i][j] + b[i][j]*x[i][j] + c[i][j])
-		}
-		costs = costs + costsX
-	}
-	return
-}
-*/
