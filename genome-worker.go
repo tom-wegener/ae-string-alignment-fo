@@ -2,6 +2,7 @@ package main
 
 import (
 	"math/rand"
+	"time"
 )
 
 //Child is a child or genome with its fitness
@@ -155,11 +156,14 @@ func (x *Child) initiateFlowZero(verticesCount int) {
 //  - only uses existing vertices
 func (x *Child) initiateFlowOne(verticesCount int, network [][]bool) {
 
-	for i := verticesCount; i > 0; i-- {
+	localStorage := x.demand
+	for i := (verticesCount - 1); i >= 0; i-- {
 		var flowX []int64
-		for j := (verticesCount - 1); j > 0; j-- {
+		for j := (verticesCount - 2); j >= 0; j-- {
 			if network[i][j] {
 				randomInt := rand.Int63n(10)
+				localStorage[i] = localStorage[i] - randomInt
+				localStorage[j] = localStorage[j] + randomInt
 				flowX = append(flowX, randomInt)
 			} else {
 				flowX = append(flowX, 0)
@@ -167,6 +171,7 @@ func (x *Child) initiateFlowOne(verticesCount int, network [][]bool) {
 		}
 		x.flow = append(x.flow, flowX)
 	}
+	x.storage = localStorage
 	return
 }
 
@@ -174,14 +179,16 @@ func (x *Child) initiateFlowOne(verticesCount int, network [][]bool) {
 //  - only uses existing vertices
 //  - recognizes the demand
 func (x *Child) initiateFlowTwo(verticesCount int, network [][]bool) {
+	r := rand.New(rand.NewSource(time.Now().UTC().UnixNano()))
 
-	localStorage := x.demand
+	localStorage := make([]int64, len(x.demand))
+	copy(localStorage, x.demand)
 
 	for i := (verticesCount - 1); i >= 0; i-- {
 		var flowX []int64
 		for j := (verticesCount - 2); j >= 0; j-- {
 			if network[i][j] && localStorage[i] > 0 {
-				randomInt := rand.Int63n(localStorage[i])
+				randomInt := r.Int63n(localStorage[i])
 				localStorage[i] = localStorage[i] - randomInt
 				localStorage[j] = localStorage[j] + randomInt
 				flowX = append(flowX, randomInt)
