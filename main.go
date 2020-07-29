@@ -2,10 +2,9 @@ package main
 
 import (
 	"log"
-	"math/rand"
 	"os"
+	"sort"
 	"strconv"
-	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -14,6 +13,7 @@ import (
 type Config struct {
 	Input          string
 	Generations    int
+	hcGenerations  int
 	Initiate       string
 	Estimator      string
 	Mutate         string
@@ -29,8 +29,6 @@ var cfg Config
 func main() {
 
 	readConfig(&cfg)
-	// Seed the random gen
-	rand.Seed(time.Now().UTC().UnixNano())
 
 	// Extract the date out of the File and check if there could be errors
 	verticesCount, customerDemand, Aij, Bij, Cij := parseFile(cfg.Input)
@@ -58,18 +56,19 @@ func main() {
 	if cfg.Algorithmus == "hillclimber" {
 		for i := 0; i < 200; i++ {
 			println("------ ", i, ". Run ------")
-			hillclimb(cfg, verticesCount, demand, network, costsA, costsB, costsC, i)
+			hillclimb(verticesCount, demand, network, costsA, costsB, costsC, i)
 		}
 	} else if cfg.Algorithmus == "evolutionär" {
-		println("Generating population...")
 		var population []Child
 		population = populate(network, verticesCount, demand, costsA, costsB, costsC)
-		println("Population generated...")
+		population = selectionTurnier(population)
 		for i := 0; i < cfg.Generations; i++ {
-			population = ranking(population)
-			printChild(population[0], i)
-			population = selection(population, costsA, costsB, costsC)
+			population = evolution(population, costsA, costsB, costsC, network)
+			population = selectionTurnier(population)
+			printChild(population[0], i+1)
 		}
+		sort.Sort(ByFitness(population))
+		printChild(population[0], cfg.Generations+2)
 	}
 }
 
@@ -81,7 +80,7 @@ func printChild(x Child, n int) {
 	println(x.fitness, ",")
 }
 
-func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64, run int) {
+func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64, run int) {
 
 	c := new(Child) // Always Child
 	x := new(Child) // Always parent
@@ -104,7 +103,7 @@ func hillclimb(cfg Config, verticesCount int, demand []int64, network [][]bool, 
 	x.costCalculator(costsA, costsB, costsC)
 	println(x.fitness, ",")
 
-	for i := 0; i < cfg.Generations; i++ {
+	for i := 0; i < cfg.hcGenerations; i++ {
 		x.findNeighbourTwo(c, network)
 		c.costCalculator(costsA, costsB, costsC)
 		if c.fitness < x.fitness {
