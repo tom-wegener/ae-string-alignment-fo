@@ -1,5 +1,7 @@
 package main
 
+import "os"
+
 // x[i][j] is the flow for the between the vertices i and j
 // The functions get the three cost-matrices (variable a, varioable b, fixed c) and the flow-matrix and calculate the overall cost of the flow-matrix.
 // We can use them as to calculate our overall fitness
@@ -24,8 +26,19 @@ func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 			punishment = punishment + abs(store)
 		}
 	}
-	costs = costs + punishment*100000
+	costs = costs + punishment*10000
 	x.fitness = costs
+	if x.fitness < 0 {
+		println(x.fitness)
+		for i, row := range x.flow {
+			print(x.storage[i], ", ")
+			for j := range row {
+				print(x.flow[i][j], ", ")
+			}
+			println()
+		}
+		os.Exit(0)
+	}
 	return
 }
 
