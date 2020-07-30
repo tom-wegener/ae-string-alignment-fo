@@ -103,7 +103,7 @@ func (x *Child) findNeighbourOne(c *Child) {
 //  - only mutate existing edges
 func (x *Child) findNeighbourTwo(c *Child, network [][]bool) {
 	c.flow = x.flow
-	c.fitness = x.fitness
+	c.fitness = 0
 	c.storage = x.storage
 	c.demand = x.demand
 	localStorage := x.demand
@@ -120,10 +120,11 @@ func (x *Child) findNeighbourTwo(c *Child, network [][]bool) {
 
 	randomEdge := rand.Intn(len(edges))
 
-	for i := edges[randomEdge][0]; i >= 0; i-- {
-		for j := edges[randomEdge][1]; j >= 0; j-- {
-			if localStorage[i] > 0 {
-				randomInt := rand.Int63n(localStorage[i])
+	for i := len(c.flow) - 1; i >= edges[randomEdge][0]; i-- {
+		for j := edges[randomEdge][1]; j < len(c.flow[i]); j++ {
+			tmp := localStorage[i] + c.flow[i][j]
+			if tmp > 0 {
+				randomInt := rand.Int63n(tmp)
 				localStorage[i] = localStorage[i] - randomInt
 				localStorage[j] = localStorage[j] + randomInt
 				c.flow[i][j] = randomInt
