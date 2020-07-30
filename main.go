@@ -11,17 +11,17 @@ import (
 
 // Config is the config-struct
 type Config struct {
-	Input          string
-	Generations    int
-	hcGenerations  int
-	Initiate       string
-	Estimator      string
-	Mutate         string
-	Dot            bool
-	PopulationSize int
-	MutationRate   float64
-	Crossover      string
-	Algorithmus    string
+	Input                string
+	Generations          int
+	HillclimbGenerations int
+	Initiate             string
+	Mutate               string
+	Dot                  bool
+	PopulationSize       int
+	MutationDruck        float64
+	Crossover            string
+	Algorithmus          string
+	TurnierGegner        int
 }
 
 var cfg Config
@@ -53,23 +53,22 @@ func main() {
 	}
 	demand = append(demand, sourceCapacity)
 
+	var csvList [][]int64
 	if cfg.Algorithmus == "hillclimber" {
-		for i := 0; i < 200; i++ {
-			println("------ ", i, ". Run ------")
-			hillclimb(verticesCount, demand, network, costsA, costsB, costsC, i)
-		}
+		csvList = hillclimb(verticesCount, demand, network, costsA, costsB, costsC)
 	} else if cfg.Algorithmus == "evolutionär" {
-		var population []Child
-		population = populate(network, verticesCount, demand, costsA, costsB, costsC)
-		population = selectionTurnier(population)
-		for i := 0; i < cfg.Generations; i++ {
-			population = evolution(population, costsA, costsB, costsC, network)
-			population = selectionTurnier(population)
-			printChild(population[0], i+1)
-		}
-		sort.Sort(ByFitness(population))
-		printChild(population[0], cfg.Generations+2)
+		csvList = geneticAlgorithm(verticesCount, demand, network, costsA, costsB, costsC)
 	}
+	var csvString string
+	for _, row := range csvList {
+		csvString = csvString + strconv.FormatInt(row[0], 10) + "," + strconv.FormatInt(row[1], 10) + ",\n"
+	}
+	f, err := os.Create("report/tmp.csv")
+	errFunc(err)
+	defer f.Close()
+	_, err = f.WriteString(csvString)
+	errFunc(err)
+
 }
 
 func printChild(x Child, n int) {
@@ -80,7 +79,25 @@ func printChild(x Child, n int) {
 	println(x.fitness, ",")
 }
 
-func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64, run int) {
+func geneticAlgorithm(verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64) (csvList [][]int64) {
+	var population []Child
+	population = populate(network, verticesCount, demand, costsA, costsB, costsC)
+	population = selectionTurnier(population)
+	for i := 0; i < cfg.Generations; i++ {
+		population = selectionTurnier(population)
+		population = evolution(population, costsA, costsB, costsC, network)
+
+		// Output best child of this generation
+		var pool []Child
+		copy(pool, population)
+		sort.Sort(ByFitness(pool))
+		csvList = append(csvList, []int64{int64(i + 1), population[0].fitness})
+		printChild(population[0], i+1)
+	}
+	return
+}
+
+func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, costsB, costsC [][]int64) (csvList [][]int64) {
 
 	c := new(Child) // Always Child
 	x := new(Child) // Always parent
@@ -96,25 +113,25 @@ func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, cost
 		x.initiateFlowTwo(verticesCount, network)
 	}
 
-	print(run, ",")
 	for _, storage := range x.storage {
 		print(storage, ",")
 	}
 	x.costCalculator(costsA, costsB, costsC)
 	println(x.fitness, ",")
 
-	for i := 0; i < cfg.hcGenerations; i++ {
-		x.findNeighbourTwo(c, network)
+	for i := 0; i < cfg.HillclimbGenerations; i++ {
+		x.findNeighbourOne(c)
 		c.costCalculator(costsA, costsB, costsC)
+		csvList = append(csvList, []int64{int64(i + 1), c.fitness})
+		for k := range x.storage {
+			print(x.storage[k], ", ")
+		}
+		println(x.fitness, ",")
 		if c.fitness < x.fitness {
 			c.toParent(x)
-			print(run, ",")
-			for k := range x.storage {
-				print(x.storage[k], ", ")
-			}
-			println(x.fitness, ",")
 		}
 	}
+	return csvList
 }
 
 func readConfig(cfg *Config) {
