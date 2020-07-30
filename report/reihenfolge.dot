@@ -1,0 +1,16 @@
+digraph {
+    rankdir=LR;
+    node [shape=box];
+    Initiierung -> "initiale Kostenberechnung";
+    "initiale Kostenberechnung" -> Crossover;
+    
+    subgraph cluster {
+        label="Genetischer Algorithmus";
+        Crossover -> Mutation;
+        Mutation -> Kostenberechnung; 
+        Kostenberechnung -> Selektion;
+        Selektion -> "Abbruch?" -> Crossover;
+        { rank=same; "Abbruch?", Mutation }
+        { rank=same; Kostenberechnung, Selektion }
+    }
+}

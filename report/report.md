@@ -46,10 +46,60 @@ Die Evolution im Netzwerk wurde über einen genetischen Algorithmus versucht, gr
 
 Generell wurde die Kosten-Funktion beibehalten, die weiterhin eine Güte zurückgibt, die zu minimieren ist. Der Strafterm wurde auch beibehalten.
 
+### Abbruchbedingungen
+
+Es gibt für den genetischen Algorithmus in diesem Fall zwei Abbruch-Bedingungen.
+Die eine Abbruchsbedingung ist an die Anzahl an Generationen geknüpft, die über die cfg.yml eingestellt werden können.
+Danach gibt der Algorithmus das beste Individuum aus.
+
+Die zweite Abbruchsbedingung ist abhängig von den Güte-Werten. Unter bestimmten Bedingungen können diese sehr hoch werden und sind größer als die Implementation erlaubt. Da go jedoch in der Version 1.14.2 dann nicht abbricht, sondern der Wert als ein anderer negativer Wert interpretiert wird, wird der Algorithmus abgebrochen falls ein Güte-Wert negativ wird. Der Algorithmus wird dann abgebrochen, weil die Wahrscheinlichkeit wieder gute Werte zu erlangen niedrig ist.
+
+Es gibt keine Abbruchsbedingung, die den Algorithmus bei einem bestimmten Minimal-Wert abbricht, weil bei diesem Problem kein Optimal-Wert nicht bekannt ist.
+
 ### Erzeugen einer Population
 
-Die Population wurde über eine Funktion erzeugt, die, je nach eingestellter Populationsgröße, eine feste Anzahl an Individuen mit der gleichen Funktion, wie die Individuen des Hillclimbers, erzeugt. Dadurch entsteht eine Population, die einerseits sehr hohen Gütewerte hat.
+Die Population wurde über eine Funktion erzeugt, die, je nach eingestellter Populationsgröße, eine feste Anzahl an Individuen mit der gleichen Funktion, wie die Individuen des Hillclimbers, erzeugt.
+Dadurch entsteht eine Population, die einerseits relativ niedrigen Gütewerte hat, aber noch verbessert werden kann.
+Es wurde sich auch hier gegen eine komplett zufällige Initiierung entschieden, da diese oft verhältnismäßig schlechte Gütewerte produziert, die teilweise den Rahmen des Datentyps gesprengt hat und dann als negativer Wert interpretiert wurden, die dann als besonders gut bewertet wurden.
+Mit Hilfe der zweiten Abbruchsbedingung wurde eine Verfälschung in Testläufen verhindert.
 
-### Selektion von Flows
+### Selektion der besten Flows
 
-Für die Selektion wurden verschiedene Selektionsarten ausprobiert. Einerseits wurde die Rang-basierte Selektion ausprobiert
+Für die Selektion wurden verschiedene Selektionsarten ausprobiert.
+Einerseits wurde die Rang-basierte Selektion ausprobiert, die in der Vorlesung erwähnt wurde:
+
+$$ PR[A^{(i)}] = \frac{2}{r} (1- \frac{i-1}{r-1})$$
+
+Jedoch ist diese für Selektion für Populationengrößen von 2000 nicht gut geeignet, da das beste Individuum nur eine Auswahl-Wahrscheinlichkeit von 1/1000 erreichen kann.
+Dadurch haben schlechtere Individuen eine höhere Chance für die nächste Generation ausgewählt zu werden.
+Mit der Rang-basierten Selektion wurde mehrmals die zweite Abbruchbedingung erreicht.
+
+Als Alternative dazu wurde eine Abwandlung der Turnier-Selektion genutzt, die jedes Individuum gegen eine eingestellte Anzahl an zufällig ausgewählten Individuen antreten lässt und diese ersetzt, wenn es gewinnt.
+Bei dieser Selektion wurden deutliche Verbesserungen erreicht.
+
+TODO: Grafik
+
+### Rekombination von Flows
+
+Als Rekombination von Flows wurde das klassische Crossover in Form eines One-Point-Crossovers und eines Two-Point-Crossovers genutzt.
+Dabei wurden die Crossover-Punkte immer zufällig gewählt.
+
+TODO: Grafiken (One&Two-Point)
+
+### Flow-Mutation
+
+Die Mutation wurde über zwei verschiedene Arten und Weisen versucht.
+Einerseits wurde eine fast komplett zufällige Mutation ausprobiert, die durch alle möglichen Kanten gegangen ist und sie abhängig vom Mutationsdruck mutieren ließ. Dabei ist der neue Kantenwert abhängig von der storage. Dabei wird jedoch nur eine Kante mutiert und die folgenden Kanten nicht korrigiert.
+
+Andererseits wurde eine bessere Mutation ausprobiert, die durch alle existenten Kanten geht und diese abhängig vom Mutationsdruck und der storage des Anfangsknoten mutiert.
+Dabei entscheidet der Mutationsdruck nur, ob die Kante verändert wird, während der storage-Wert die Obergrenze des neuen Wertes bestimmt.
+Was diese Art der Mutation unterscheidet ist, dass nach der Mutation einer Kante die folgenden Kanten angepasst werden.
+
+TODO: Grafiken
+
+### Ablauf des Algorithmus
+
+Der Algorithmus ruft bis eine der Abbruchbedingung erreicht werden die einzelnen Funktionen auf, dabei wird jedoch nur einemal eine Population erstellt, danach wird mutiert, rekombiniert und anschließend selektiert. Es wurde sich für diese Reihenfolge entschieden, da sie bessere Ergebnisse liefert und auch mehr Mutation ermöglicht.
+![Ablauf-Diagramm](reihenfolge.png)
+
+## Vergleich von Hillclimbing und genetische Algorithmen im Netzwerk
