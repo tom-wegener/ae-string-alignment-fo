@@ -2,7 +2,6 @@ package main
 
 import (
 	"math/rand"
-	"os"
 	"sort"
 )
 
@@ -43,13 +42,13 @@ func selectionRanking(population []Child) (pool []Child) {
 
 func selectionTurnier(population []Child) (pool []Child) {
 	pool = population
-	gegner := 3
 
-	for i := 0; i < len(pool); i++ {
-		for j := 0; j < gegner; j++ {
-			rI := rand.Intn(len(pool))
-			if pool[i].fitness < pool[rI].fitness {
-				pool[rI] = pool[i]
+	for i := 0; i < len(population); i++ {
+		r1 := rand.Intn(len(population))
+		for j := 0; j < cfg.TurnierGegner; j++ {
+			r2 := rand.Intn(len(population))
+			if population[r1].fitness < population[r2].fitness {
+				pool[r1] = population[r1]
 			}
 		}
 	}
@@ -57,7 +56,7 @@ func selectionTurnier(population []Child) (pool []Child) {
 }
 func evolution(population []Child, costA, costB, costC [][]int64, network [][]bool) (pool []Child) {
 	pool = make([]Child, 0)
-	for i := 0; i < cfg.PopulationSize; i++ {
+	for i := 0; i < cfg.PopulationSize; i = i + 2 {
 		var x Child
 		var c Child
 		r1 := rand.Intn(len(population))
@@ -67,21 +66,11 @@ func evolution(population []Child, costA, costB, costC [][]int64, network [][]bo
 		c.onePointCrossover(&x)
 
 		c.betterMutate(network)
+		x.betterMutate(network)
 
 		c.costCalculator(costA, costB, costC)
-		if c.fitness < 0 {
-			println(c.fitness)
-			for i, row := range c.flow {
-				print(c.storage[i], ", ")
-				for j := range row {
-					print(c.flow[i][j], ", ")
-				}
-				println()
-			}
-			os.Exit(0)
-
-		}
-		pool = append(pool, c)
+		x.costCalculator(costA, costB, costC)
+		pool = append(pool, c, x)
 	}
 	return
 }
@@ -135,7 +124,7 @@ func (x *Child) twoPointCrossover(c *Child) {
 func (x *Child) randomMutate(network [][]bool) {
 	for i, row := range x.flow {
 		for j := range row {
-			if rand.Float64() < cfg.MutationRate {
+			if rand.Float64() < cfg.MutationDruck {
 				storeI := x.storage[i] + x.flow[i][j]
 				if storeI > 0 && network[i][j] {
 					x.storage[i] = x.storage[i] + x.flow[i][j]
@@ -153,6 +142,7 @@ func (x *Child) randomMutate(network [][]bool) {
 func (x *Child) betterMutate(network [][]bool) {
 	localStorage := x.demand
 
+	// Get List of all edges
 	var edges [][]int
 	for i, row := range network {
 		for j, cell := range row {
@@ -162,13 +152,17 @@ func (x *Child) betterMutate(network [][]bool) {
 			}
 		}
 	}
-	for i := range edges {
-		if rand.Float64() < cfg.MutationRate {
 
-			for i := edges[i][0]; i >= 0; i-- {
-				for j := edges[i][1]; j >= 0; j-- {
-					if localStorage[i] > 0 {
-						randomInt := rand.Int63n(localStorage[i])
+	//Loop through the list and mutate if it has to
+	for k := range edges {
+		if rand.Float64() < cfg.MutationDruck {
+
+			// Loop though al edges and mutate all following edges according to the storage
+			for i := len(x.flow) - 1; i >= edges[k][0]; i-- {
+				for j := edges[k][1]; j < len(x.flow[i]); j++ {
+					tmp := localStorage[i] + x.flow[i][j]
+					if tmp > 0 {
+						randomInt := rand.Int63n(tmp)
 						localStorage[i] = localStorage[i] - randomInt
 						localStorage[j] = localStorage[j] + randomInt
 						x.flow[i][j] = randomInt
