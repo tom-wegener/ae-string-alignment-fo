@@ -1,11 +1,11 @@
-#--- 
-estimator: zero
-generations: 2000
-hcgeneration: 2000000
-initiate: two
 input: input/n=10/CCNFP10g1a.txt
+generations: 2000
+hillclimbgenerations: 2000
+initiate: two
 mutate: smarter
-dot: True
+dot: False
 populationsize: 20000
-mutationrate: 0.05
-algorithmus: evolutionär
+mutationdruck: 0.05
+crossover: one
+algorithmus: hillclimber
+turniergegner: 5
