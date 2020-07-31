@@ -74,10 +74,10 @@ func (x *Child) findNeighbourZero(c *Child) {
 //  - recognize demand/storage
 func (x *Child) findNeighbourOne(c *Child) {
 	c.flow = x.flow
-	c.fitness = x.fitness
+	c.fitness = 0
 	c.storage = x.storage
 	c.demand = x.demand
-	localStorage := x.demand
+	localStorage := c.storage
 
 	randomI := rand.Intn(10)
 
@@ -106,7 +106,7 @@ func (x *Child) findNeighbourTwo(c *Child, network [][]bool) {
 	c.fitness = 0
 	c.storage = x.storage
 	c.demand = x.demand
-	localStorage := x.demand
+	localStorage := c.storage
 
 	var edges [][]int
 	for i, row := range network {
@@ -118,12 +118,16 @@ func (x *Child) findNeighbourTwo(c *Child, network [][]bool) {
 		}
 	}
 
-	randomEdge := rand.Intn(len(edges))
+	randomEdge := edges[rand.Intn(len(edges))]
 
-	for i := len(c.flow) - 1; i >= edges[randomEdge][0]; i-- {
-		for j := edges[randomEdge][1]; j < len(c.flow[i]); j++ {
+	toChange := false
+	for i := range c.flow {
+		for j := range c.flow[i] {
+			if i == randomEdge[0] && j == randomEdge[1] {
+				toChange = true
+			}
 			tmp := localStorage[i] + c.flow[i][j]
-			if tmp > 0 {
+			if tmp > 0 && toChange {
 				randomInt := rand.Int63n(tmp)
 				localStorage[i] = localStorage[i] - randomInt
 				localStorage[j] = localStorage[j] + randomInt

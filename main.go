@@ -39,7 +39,9 @@ func main() {
 	errFunc(err)
 
 	// Generate a Graph based on the costs of A
-	makeGraph(costsA)
+	if cfg.Dot {
+		makeGraph(costsA)
+	}
 
 	// Calculate the demand which is also the capacity of the source
 	// The demand could be seen as negative storage capacity
@@ -63,7 +65,8 @@ func main() {
 	for _, row := range csvList {
 		csvString = csvString + strconv.FormatInt(row[0], 10) + "," + strconv.FormatInt(row[1], 10) + ",\n"
 	}
-	f, err := os.Create("report/tmp.csv")
+	fileName := "helpers/" + strconv.Itoa(cfg.PopulationSize) + "pop_" + strconv.Itoa(cfg.Generations) + "gen_" + strconv.Itoa(cfg.TurnierGegner) + "geg_" + strconv.FormatFloat(cfg.MutationDruck, 'f', -1, 32) + "druck.csv"
+	f, err := os.Create(fileName)
 	errFunc(err)
 	defer f.Close()
 	_, err = f.WriteString(csvString)
@@ -120,13 +123,17 @@ func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, cost
 	println(x.fitness, ",")
 
 	for i := 0; i < cfg.HillclimbGenerations; i++ {
-		x.findNeighbourOne(c)
+		// Find Neighbour of x
+		x.findNeighbourTwo(c, network)
 		c.costCalculator(costsA, costsB, costsC)
-		csvList = append(csvList, []int64{int64(i + 1), c.fitness})
-		for k := range x.storage {
+
+		csvList = append(csvList, []int64{int64(i + 1), x.fitness})
+
+		for k := range c.storage {
 			print(x.storage[k], ", ")
 		}
 		println(x.fitness, ",")
+
 		if c.fitness < x.fitness {
 			c.toParent(x)
 		}
@@ -144,8 +151,9 @@ func readConfig(cfg *Config) {
 	errFunc(err)
 }
 
+// produce a dotfile which displays the graph
 func makeGraph(network [][]int64) {
-	graph := `digraph graphname
+	graph := `digraph
 	{
 `
 	for i, row := range network {
