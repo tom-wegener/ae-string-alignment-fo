@@ -1,11 +1,11 @@
 input: input/n=10/CCNFP10g1a.txt
-generations: 2000
+generations: 20000
 hillclimbgenerations: 2000
 initiate: two
 mutate: smarter
 dot: False
-populationsize: 20000
+populationsize: 200
 mutationdruck: 0.05
 crossover: one
-algorithmus: hillclimber
+algorithmus: evolutionär
 turniergegner: 5
