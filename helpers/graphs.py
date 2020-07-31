@@ -57,7 +57,7 @@ def main():
     plt.xlim(0, max(time))
     plt.legend(loc="upper right")
 
-    plt.savefig("opc_tpc_2.png", bbox_inches="tight")
+    plt.savefig("gegner.png", bbox_inches="tight")
 
 
 main()
