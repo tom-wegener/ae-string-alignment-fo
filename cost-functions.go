@@ -7,15 +7,11 @@ import "os"
 // We can use them as to calculate our overall fitness
 
 func (x *Child) costCalculator(a, b, c [][]int64) {
-	x.costEstimatorZero(a, b, c)
-}
-
-func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 	var costs int64 = 0
 	for i, row := range a {
 		var costsX int64
 		for j := range row {
-			costsX = costsX + costEstimatorZeroEdge(a[i][j], b[i][j], c[i][j], x.flow[i][j])
+			costsX = costsX + costCalculatorEdge(a[i][j], b[i][j], c[i][j], x.flow[i][j])
 		}
 		costs = costs + costsX
 	}
@@ -26,7 +22,7 @@ func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 			punishment = punishment + abs(store)
 		}
 	}
-	costs = costs + punishment*10000
+	costs = costs + punishment*100
 	x.fitness = costs
 	if x.fitness < 0 {
 		println(x.fitness)
@@ -39,10 +35,9 @@ func (x *Child) costEstimatorZero(a, b, c [][]int64) {
 		}
 		os.Exit(0)
 	}
-	return
 }
 
-func costEstimatorZeroEdge(aij, bij, cij int64, xij int64) (costs int64) {
+func costCalculatorEdge(aij, bij, cij int64, xij int64) (costs int64) {
 	costs = aij*xij*xij + bij*xij + cij
 	if costs < 0 {
 		println(-aij, xij, bij, xij, cij)
