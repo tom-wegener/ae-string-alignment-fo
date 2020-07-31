@@ -48,7 +48,7 @@ func selectionTurnier(population []Child) (pool []Child) {
 		for j := 0; j < cfg.TurnierGegner; j++ {
 			r2 := rand.Intn(len(population))
 			if population[r1].fitness < population[r2].fitness {
-				pool[r1] = population[r1]
+				pool[r2] = population[r1]
 			}
 		}
 	}
@@ -154,14 +154,18 @@ func (x *Child) betterMutate(network [][]bool) {
 	}
 
 	//Loop through the list and mutate if it has to
-	for k := range edges {
+	for _, edge := range edges {
 		if rand.Float64() < cfg.MutationDruck {
 
 			// Loop though al edges and mutate all following edges according to the storage
-			for i := len(x.flow) - 1; i >= edges[k][0]; i-- {
-				for j := edges[k][1]; j < len(x.flow[i]); j++ {
+			toChange := false
+			for i := range x.flow {
+				for j := range x.flow[i] {
+					if i == edge[0] && j == edge[1] {
+						toChange = true
+					}
 					tmp := localStorage[i] + x.flow[i][j]
-					if tmp > 0 {
+					if tmp > 0 && toChange {
 						randomInt := rand.Int63n(tmp)
 						localStorage[i] = localStorage[i] - randomInt
 						localStorage[j] = localStorage[j] + randomInt
