@@ -26,6 +26,10 @@ Die Kosten für die Kanten sind in drei verschiedene Komponenten unterteilt, die
 
 Zusätzlich werden drei verschiedene polynomiale konkave Funktionen bereitgestellt, die als Teil einer Güte-Funktion genutzt werden können.
 
+![Der Graph mit 10 Knoten](gfx/graph.png)
+
+\newpage
+
 ## Hillclimbing im Netzwerk
 
 Der Hillclimbing-Algorithmus basiert auf der Annahme, dass in der Nachbarschaft eines Individuums ein besseres Individuum gefunden werden kann. Zusätzlich basiert er auf der Annahme, dass ausgehend von diesem Individuum ein weiteres gefunden werden kann. In diesem Fall ist das Individuum ein sog. Flow, also wieviele Waren über welche Kante transportiert werden. Dabei wird der Flow in diesem Fall im Programm durch eine Matrix dargestellt.
@@ -34,17 +38,30 @@ Das Individuum ist ein struct, also ein Objekt, das einerseits die Flow-Matrix d
 
 Die Flow-Matrix des Individuums wird durch eine Funktion initialisiert, die verschiedene Sachen wie das Vorhandensein von Kanten, den sog. Demand und auch die Quellenkapazität berücksichtigt. Die Quellenkapazität wird dabei über die Summe der Demands berechnet, da sie nur den Demand befriedigen muss. Die Position der Kanten wird über die Kosten-Matrizen berechnet. Der Demand wird als negatives Lager berücksichtigt, der Überschuss dient anschließend als Obergrenze für eine Zufallsfunktion, die die restlichen Waren weiterverteilt. Anschließend wird der Güte-Wert berechnet.
 
-Der Nachbar wird über eine Funktion gefunden, die genau die gleichen Faktoren berücksichtigt. Jedoch ist der Anfangspunkt nicht die Quelle, sondern eine zufällig ausgewählte Kante. Anschließend werden alle folgenden Punkte über eine Zufallsfunktion mit dem Überschuss als Obergrenze neu verteilt. Dadurch sind zwar Nachbarn relativ weit voneinander entfernt, aber die Chance tatsächliche Verbesserungen zu erreichen ist deutlich erhöht. Statt Güte-Werten, die konstant im neun- bis zehn-stelligen Bereich sind, wurden dadurch auch Werte im mittleren sieben-stelligen Bereich gefunden.
+Der Nachbar wird über eine Funktion gefunden, die genau die gleichen Faktoren berücksichtigt. Jedoch ist der Anfangspunkt nicht die Quelle, sondern eine zufällig ausgewählte Kante. 
+Anschließend werden alle folgenden Punkte über eine Zufallsfunktion mit dem Überschuss als Obergrenze neu verteilt. 
+Dadurch sind zwar Nachbarn relativ weit voneinander entfernt, aber die Chance tatsächliche Verbesserungen zu erreichen ist deutlich erhöht. 
+Statt Güte-Werten, die konstant im neun- bis zwölf-stelligen Bereich sind, wurden dadurch auch Werte im mittleren sechs-stelligen Bereich gefunden.
+Diese sind jedoch nicht in den Messdaten enthalten.
 
-Der Gütewert wird über die oben genannte Funktion berechnet. Zusätzlich gibt es jedoch einen Strafterm, der von den an den Knoten gespeicherten werden abhängig ist.
+Der Gütewert wird über die oben genannte Funktion berechnet. Zusätzlich gibt es jedoch einen Strafterm, der von den an den Knoten gespeicherten Werten abhängig ist.
 
-Wie es beim Hillclimbing üblich ist, werden die Gütewerte der Individuen verglichen und für das Individuum mit dem besseren, also kleineren, Gütewert wird ein neuer Nachbar gefunden.
+Wie es beim Hillclimbing üblich ist, werden die Gütewerte der Individuen verglichen und für das Individuum mit dem besseren, also kleineren, Gütewert wird ein neuer Nachbar gefunden. 
+Dann wird erneut verglichen und wieder für das Individuum mit dem besseren, also kleineren Gütewert ein neuer Nachbar gefunden jedoch unabhängig ob das bessere Individuum schon in der vorherigen Iteration der Vorgänger war.
+
+![Hillclimbing-Algorithmus](gfx/hillclimber.png)
+
+Die Grafik zeigt den Iterationschritt und den Fitness-Wert des Individuums. An der Grafik lässt sich erkennen, dass der Hillclimb-Algorithmus relativ schnell zu einem Wert kommt von dem er nicht mehr bessere Werte erreicht.
+
+\newpage
 
 ## Evolution im Netzwerk
 
 Die Evolution im Netzwerk wurde über einen genetischen Algorithmus versucht, greift aber auch teilwise auf die gleichen oder abgewandelte Funktionen des Hill-Climbing zu. Jedoch wurden auch verschiedene Funktionen ausprobiert, die unabhängig von dem Hillclimber entstanden sind.
 
 Generell wurde die Kosten-Funktion beibehalten, die weiterhin eine Güte zurückgibt, die zu minimieren ist. Der Strafterm wurde auch beibehalten.
+
+In den Grafiken werden immer die besten Individuen der Population betrachtet.
 
 ### Abbruchbedingungen
 
@@ -63,6 +80,10 @@ Dadurch entsteht eine Population, die einerseits relativ niedrigen Gütewerte ha
 Es wurde sich auch hier gegen eine komplett zufällige Initiierung entschieden, da diese oft verhältnismäßig schlechte Gütewerte produziert, die teilweise den Rahmen des Datentyps gesprengt hat und dann als negativer Wert interpretiert wurden, die dann als besonders gut bewertet wurden.
 Mit Hilfe der zweiten Abbruchsbedingung wurde eine Verfälschung in Testläufen verhindert.
 
+![verschiedene Populationen](gfx/pop.png)
+
+An der Grafik ist erkennbar, dass eine Populationsgröße von 40 die meiste Varianz der besten Individuen bietet, während die Populationensgrößen 100 und 200 relativ schnell das Optimum gefunden haben. In den folgenden Auswertungen werden deshalb als eine Art Kompromiss die Populationsgröße von 80 verwendet.
+
 ### Selektion der besten Flows
 
 Für die Selektion wurden verschiedene Selektionsarten ausprobiert.
@@ -75,16 +96,25 @@ Dadurch haben schlechtere Individuen eine höhere Chance für die nächste Gener
 Mit der Rang-basierten Selektion wurde mehrmals die zweite Abbruchbedingung erreicht.
 
 Als Alternative dazu wurde eine Abwandlung der Turnier-Selektion genutzt, die jedes Individuum gegen eine eingestellte Anzahl an zufällig ausgewählten Individuen antreten lässt und diese ersetzt, wenn es gewinnt.
-Bei dieser Selektion wurden deutliche Verbesserungen erreicht.
+Diese Selektion erreicht auch Werte, die niedriger sind als die Werte der Rang-basierten Selektion.
 
-TODO: Grafik
+![verschiedene Selektionsarten](gfx/selektion.png)
+
+Auch die Menge an Gegnern in der Turnierselektion bringt Veränderungen:
+![Variation der Menge an Gegnern bei der Turnierselektion](gfx/gegner.png)
 
 ### Rekombination von Flows
 
 Als Rekombination von Flows wurde das klassische Crossover in Form eines One-Point-Crossovers und eines Two-Point-Crossovers genutzt.
-Dabei wurden die Crossover-Punkte immer zufällig gewählt.
+Dabei wurden die Crossover-Punkte immer zufällig gewählt. Auf die Flow-Matrix angewendet wurde dann durch die Zellen iteriert bis die Zelle mit dem Crossover Punkt erreicht wurde. Anschließend wurde bis zum nächsten Crossover-Punkt oder bis zum Ende durch die weiteren Zellen iteriert.
 
-TODO: Grafiken (One&Two-Point)
+Dadurch sind verschiedene Ergebnisse erreicht entstanden:
+
+![Variation durch die Crossover-Variante, Teil 1](gfx/opc_tpc.png)
+
+Bei dem OnePointCrossover kann als Vorteil angesehen werden, dass es auch eine sehr hohe Varianz an besten Individuen gibt.
+
+![Variation durch die Crossover-Variante, Teil 2](gfx/opc_tpc_div.png)
 
 ### Flow-Mutation
 
@@ -100,6 +130,27 @@ TODO: Grafiken
 ### Ablauf des Algorithmus
 
 Der Algorithmus ruft bis eine der Abbruchbedingung erreicht werden die einzelnen Funktionen auf, dabei wird jedoch nur einemal eine Population erstellt, danach wird mutiert, rekombiniert und anschließend selektiert. Es wurde sich für diese Reihenfolge entschieden, da sie bessere Ergebnisse liefert und auch mehr Mutation ermöglicht.
-![Ablauf-Diagramm](reihenfolge.png)
+![Ablauf-Diagramm](gfx/reihenfolge.png)
+
+\newpage
 
 ## Vergleich von Hillclimbing und genetische Algorithmen im Netzwerk
+
+Generell gestaltet es sich sehr schwierig Daten bzw. Statistiken zu erhalten, die konsistente Schlüsse ermöglichen, da jedes Ergebnis der Algorithmen natürlich von verschiedenen Faktoren abhängt und letztendlich auch vom Zufall bzw. der Zufallsfunktion der Programmiersprache in der der Algorithmus implementiert ist.
+Dadurch kann der gleiche Algoritmus mit den gleichen Einstellungen bei zwei Durchläufen zwei sehr unterschiedliche Ergebnisse abliefern.
+Dementsprechend entsteht auch eine Inkonsistenz zwischen den einzelnen Versuchsreihen.
+Ein Beispiel ist dafür die folgende Grafik, die zwei Messreihen mit den gleichen Einstellungen zeigt, die jedoch zu verschiedenen Uhrzeiten erstellt wurden:
+
+![Zwei verschiedene Ergebnisse bei den gleichen Einstellungen](gfx/samesamebutdifferent.png)
+
+Dieses Phänomen konnte jedoch nur bei dem One-Point-Crossover beobachtet werden.
+
+Zusätzlich sind in den Grafiken und den Versuchssreihen immer nur die besten Individuen abgebildet.
+Das kann auch ein Problem in der Auswertung ergeben, weil sich die Population insgesamt immer mehr an das Optimum annähern kann, sich das aber nicht in der Grafik wiederspriegelt.
+Es wurde sich trotzdem für diese Daten entschieden, da das Interesse auf dem Erreichen des Optimum liegt.
+Ein weiteres Problem der Grafiken zeigt sich durch den abgebildeten Wertebereich. Kleinere Veränderungen gehen durch den oftmals großen Wertebereich unter.
+
+Die Datenstruktur wurde so gewählt, um optimal den Flow abbilden zu können und die Kosten schnell und einfach ausrechnen zu können, jedoch ist sie keine Datenstruktur mit der einfach diverse Populationen erstellt oder Individuen variierend mutiert werden können.
+In einer erneuten Bearbeitung würde ich mich gegen eine Flow-Matrix entscheiden und viellicht mit einer Kanten-Liste arbeiten.
+
+Der beste Wert, den die hier genannten Algorithmen bisher gefunden haben war 674700.
