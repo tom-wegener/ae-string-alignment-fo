@@ -22,7 +22,7 @@ func (x *Child) costCalculator(a, b, c [][]int64) {
 			punishment = punishment + abs(store)
 		}
 	}
-	costs = costs + punishment*100
+	costs = costs + punishment*1000
 	x.fitness = costs
 	if x.fitness < 0 {
 		println(x.fitness)

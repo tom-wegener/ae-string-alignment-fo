@@ -65,7 +65,8 @@ func main() {
 	for _, row := range csvList {
 		csvString = csvString + strconv.FormatInt(row[0], 10) + "," + strconv.FormatInt(row[1], 10) + ",\n"
 	}
-	fileName := "helpers/" + strconv.Itoa(cfg.PopulationSize) + "pop_" + strconv.Itoa(cfg.Generations) + "gen_" + strconv.Itoa(cfg.TurnierGegner) + "geg_" + strconv.FormatFloat(cfg.MutationDruck, 'f', -1, 32) + "druck.csv"
+	fileName := "helpers/" + strconv.Itoa(cfg.PopulationSize) + "pop_" + strconv.Itoa(cfg.Generations) + "gen_" + strconv.Itoa(cfg.TurnierGegner) + "geg_" + strconv.FormatFloat(cfg.MutationDruck, 'f', -1, 32) + "druck_opc.csv"
+
 	f, err := os.Create(fileName)
 	errFunc(err)
 	defer f.Close()
@@ -127,8 +128,6 @@ func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, cost
 		x.findNeighbourTwo(c, network)
 		c.costCalculator(costsA, costsB, costsC)
 
-		csvList = append(csvList, []int64{int64(i + 1), x.fitness})
-
 		for k := range c.storage {
 			print(x.storage[k], ", ")
 		}
@@ -137,6 +136,7 @@ func hillclimb(verticesCount int, demand []int64, network [][]bool, costsA, cost
 		if c.fitness < x.fitness {
 			c.toParent(x)
 		}
+		csvList = append(csvList, []int64{int64(i + 1), x.fitness})
 	}
 	return csvList
 }
